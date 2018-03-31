@@ -19,8 +19,8 @@ from #temp
 where rownum in (cnt/2, (cnt + 2)/2)
 )
 else
-(select value, rownum, cnt -- Odd number (X mod 2 != 0), pick middle value.
+(select value, -- Odd number (X mod 2 != 0), pick middle value.
 from #temp
-where rownum in (cnt/2,(cnt +1) / 2)
+where rownum in (cnt/2,(cnt + 1) / 2)
 )
 ;
