@@ -1,32 +1,20 @@
---Calculate the median value in an SQL table. 
+--Find the median salary. Table name is table, column name is salary.
 
---Get row numbers and total counts from table. 
-SELECT s.id, s.value, 
-    ROW_NUMBER() OVER(ORDER BY s.value ASC) AS rownum, 
-    COUNT(*) OVER() AS cnt
-INTO #temp
-FROM schema..table s 
-WHERE s.condition_a = 1
-    AND s.condition_b = 2
-    AND s.year = 2018;
+with ranked_salaries as (
+select 
+  salary,
+  row_number() over (order by salary) as row_num,
+  count(*) over () as total_rows
+from table)
 
---Determine median based on count being odd or even
-DECLARE @cnt INT = (SELECT TOP 1 cnt FROM #temp);
-
-IF @cnt % 2 = 0 
-BEGIN
-    -- Even number of rows: average the two middle values
-    SELECT AVG(value) AS median
-    FROM #temp
-    WHERE rownum IN (@cnt/2, (@cnt/2)+1);
-END
-ELSE
-BEGIN
-    -- Odd number of rows: select the middle value
-    SELECT value AS median
-    FROM #temp
-    WHERE rownum = (@cnt+1)/2;
-END
-
--- Clean up
-DROP TABLE #temp;
+select  
+  case
+    when total_rows % 2 = 1 then -- odd number of rows
+      (select salary from ranked_salaries where row_num = (total_rows + 1)/2)
+    else -- even number of rows
+      (select avg(salary) 
+       from ranked_salaries 
+       where row_num in (total_rows/2, total_rows/2 + 1))
+  end as median_salary
+from ranked_salaries
+limit 1;
